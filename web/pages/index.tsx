@@ -466,7 +466,7 @@ export default function Landing() {
             className="text-xs uppercase tracking-wide text-center max-w-[90vw] whitespace-normal"
             data-reveal
           >
-            <Sparkles className="mr-2 h-3.5 w-3.5 text-primary" />
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
             Built for modern growth teams
           </Badge>
 

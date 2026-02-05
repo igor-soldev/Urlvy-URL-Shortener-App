@@ -355,10 +355,17 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
-    const elements = Array.from(
-      document.querySelectorAll<HTMLElement>("[data-reveal]"),
+    const root =
+      document.querySelector<HTMLElement>("[data-reveal-root]") ??
+      document.body;
+    const revealTargets = Array.from(
+      root.querySelectorAll<HTMLElement>("*"),
+    ).filter(
+      (el) =>
+        !["SCRIPT", "STYLE", "NOSCRIPT"].includes(el.tagName) &&
+        !el.classList.contains("reveal-ignore"),
     );
-    if (!elements.length) return;
+    if (!revealTargets.length) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -368,10 +375,10 @@ export default function Landing() {
           observer.unobserve(entry.target);
         });
       },
-      { threshold: 0.2, rootMargin: "0px 0px -10% 0px" },
+      { threshold: 0.18, rootMargin: "0px 0px -12% 0px" },
     );
 
-    elements.forEach((el) => observer.observe(el));
+    revealTargets.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 
@@ -390,506 +397,524 @@ export default function Landing() {
         />
       </Head>
 
-      {/* HERO  */}
-      <section className="relative flex flex-col items-center justify-center text-center min-h-[calc(100dvh-4rem)] px-4 sm:px-6 py-16 sm:py-20 overflow-hidden">
-        {/* animated BG */}
-        <div className="absolute inset-0 -z-10 bg-[length:300%_300%] bg-gradient-to-br from-primary via-secondary to-accent animate-gradient" />
-        <div className="absolute -top-24 right-[-10%] h-64 w-64 rounded-full bg-primary/20 blur-3xl animate-float" />
-        <div className="absolute -bottom-20 left-[-5%] h-72 w-72 rounded-full bg-secondary/40 blur-3xl animate-float-delayed" />
+      <main data-reveal-root>
+        {/* HERO  */}
+        <section className="relative flex flex-col items-center justify-center text-center min-h-[calc(100dvh-4rem)] px-4 sm:px-6 py-16 sm:py-20 overflow-hidden">
+          {/* animated BG */}
+          <div className="absolute inset-0 -z-10 bg-[length:300%_300%] bg-gradient-to-br from-primary via-secondary to-accent animate-gradient" />
+          <div className="absolute -top-24 right-[-10%] h-64 w-64 rounded-full bg-primary/20 blur-3xl animate-float" />
+          <div className="absolute -bottom-20 left-[-5%] h-72 w-72 rounded-full bg-secondary/40 blur-3xl animate-float-delayed" />
 
-        <Badge
-          variant="secondary"
-          className="text-xs uppercase tracking-wide text-center max-w-[90vw] whitespace-normal"
-          data-reveal
-        >
-          <Sparkles className="mr-2 h-3.5 w-3.5 text-primary" />
-          Built for modern growth teams
-        </Badge>
-
-        <h1
-          className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight max-w-4xl mt-6"
-          data-reveal
-          style={revealStyle(80)}
-        >
-          Super-charge your&nbsp;
-          <span className="text-primary">{rotate[w]}</span>&nbsp;with smarter
-          links
-        </h1>
-
-        <p
-          className="max-w-2xl mx-auto mt-6 text-muted-foreground text-sm sm:text-base"
-          data-reveal
-          style={revealStyle(140)}
-        >
-          Urlvy turns unwieldy URLs into memorable slugs, adds AI-powered
-          previews, and tells you exactly who clicked — in real time.
-        </p>
-
-        <div
-          className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto justify-center"
-          data-reveal
-          style={revealStyle(200)}
-        >
-          <Link href="/auth/register">
-            <Button size="lg" className="w-full sm:w-auto">
-              Start free
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link
-            href="https://urlvy-url-shortener-app.onrender.com/docs"
-            target="_blank"
-          >
-            <Button size="lg" variant="outline" className="w-full sm:w-auto">
-              API Docs
-            </Button>
-          </Link>
-        </div>
-
-        <div className="flex flex-wrap gap-3 sm:gap-4 justify-center mt-10 sm:mt-14 text-sm">
-          <Counter
-            icon={<Link2 className="h-4 w-4" />}
-            val={lk.val}
-            countRef={lk.ref}
-            label="Links created"
-            delay={260}
-          />
-          <Counter
-            icon={<Star className="h-4 w-4 text-yellow-400" />}
-            val="4.9★"
-            label="User rating"
-            delay={320}
-          />
-          <Counter
-            icon={<Globe className="h-4 w-4" />}
-            val={ct.val}
-            countRef={ct.ref}
-            label="Countries"
-            delay={380}
-          />
-          <Counter
-            icon={<Users className="h-4 w-4" />}
-            val={us.val}
-            countRef={us.ref}
-            label="Teams"
-            delay={440}
-          />
-        </div>
-      </section>
-
-      {/* METRICS */}
-      <Section
-        kicker="Impact"
-        title="Proof in numbers"
-        subtitle="See the scale behind every short link, with performance metrics you can trust."
-      >
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {metrics.map((stat, i) => (
-            <StatTile key={stat.label} {...stat} delay={i * 80} />
-          ))}
-        </div>
-      </Section>
-
-      {/* FEATURES GRID  */}
-      <Section
-        kicker="Platform"
-        title="Everything you need to win clicks"
-        subtitle="A single workspace to shorten, brand, measure, and optimize — without extra scripts."
-      >
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((f, i) => (
-            <Card
-              key={f.title}
-              className="group hover:-translate-y-2 hover:shadow-xl transition"
-              data-reveal
-              style={revealStyle(i * 70)}
-            >
-              <CardHeader className="flex items-center gap-3">
-                <div className="text-primary">{f.icon}</div>
-                <CardTitle>{f.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{f.desc}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </Section>
-
-      {/* DEEP-DIVE CHART + COPY */}
-      <section className="bg-muted/5 py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 grid lg:grid-cols-2 gap-10 sm:gap-16 items-center">
-          <img
-            src="/demo.png"
-            alt="Realtime dashboard mock"
-            className="w-full rounded-xl border shadow-md"
+          <Badge
+            variant="secondary"
+            className="text-xs uppercase tracking-wide text-center max-w-[90vw] whitespace-normal"
             data-reveal
-          />
-          <div className="space-y-6">
-            <Badge variant="secondary" className="text-xs" data-reveal>
-              DASHBOARD
-            </Badge>
-            <h2
-              className="text-2xl sm:text-3xl font-bold"
-              data-reveal
-              style={revealStyle(80)}
-            >
-              Live insights, no setup script
-            </h2>
-            <p
-              className="text-muted-foreground"
-              data-reveal
-              style={revealStyle(140)}
-            >
-              Traditional analytics tools need code snippets. Urlvy starts
-              capturing data the moment you shorten — zero integration required.
-            </p>
-            <ul className="space-y-3 text-sm">
-              {[
-                "Live charts & dashboards",
-                "UTM source / medium breakout",
-                "Precise click tracking with no cookies",
-                "Link health monitoring and status checks",
-              ].map((item, i) => (
-                <li
-                  key={item}
-                  className="flex items-center gap-2"
-                  data-reveal
-                  style={revealStyle(200 + i * 60)}
-                >
-                  <Check className="h-4 w-4 text-primary" /> {item}
-                </li>
-              ))}
-            </ul>
-            <div data-reveal style={revealStyle(420)}>
-              <Button variant="outline" className="w-full sm:w-auto">
-                View demo report
+          >
+            <Sparkles className="mr-2 h-3.5 w-3.5 text-primary" />
+            Built for modern growth teams
+          </Badge>
+
+          <h1
+            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight max-w-4xl mt-6"
+            data-reveal
+            style={revealStyle(80)}
+          >
+            Super-charge your&nbsp;
+            <span className="text-primary">{rotate[w]}</span>&nbsp;with smarter
+            links
+          </h1>
+
+          <p
+            className="max-w-2xl mx-auto mt-6 text-muted-foreground text-sm sm:text-base"
+            data-reveal
+            style={revealStyle(140)}
+          >
+            Urlvy turns unwieldy URLs into memorable slugs, adds AI-powered
+            previews, and tells you exactly who clicked — in real time.
+          </p>
+
+          <div
+            className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto justify-center"
+            data-reveal
+            style={revealStyle(200)}
+          >
+            <Link href="/auth/register">
+              <Button size="lg" className="w-full sm:w-auto">
+                Start free
+                <ArrowRight className="h-4 w-4" />
               </Button>
-            </div>
+            </Link>
+            <Link
+              href="https://urlvy-url-shortener-app.onrender.com/docs"
+              target="_blank"
+            >
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                API Docs
+              </Button>
+            </Link>
           </div>
-        </div>
-      </section>
 
-      {/* HOW IT WORKS  */}
-      <Section
-        kicker="Workflow"
-        title="Three simple steps"
-        subtitle="Launch smarter links in minutes and keep every campaign aligned."
-      >
-        <div className="grid sm:grid-cols-3 gap-8 text-center">
-          {howSteps.map((s, i) => (
-            <div
-              key={s.t}
-              className="flex flex-col items-center gap-4"
-              data-reveal
-              style={revealStyle(i * 90)}
-            >
-              <div className="w-16 h-16 rounded-full border flex items-center justify-center bg-background text-primary">
-                {s.icon}
-              </div>
-              <p className="font-semibold">{s.t}</p>
-              <span className="text-muted-foreground text-xs">{s.d}</span>
-              <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                Step {i + 1}
-              </span>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* CAROUSEL: PLAYBOOKS */}
-      <Section
-        kicker="Playbooks"
-        title="Ready-made growth workflows"
-        subtitle="Swipe through proven setups that teams copy and customize in minutes."
-      >
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {playbooks.map((p, i) => (
-            <Card
-              key={p.title}
-              className="w-full hover:-translate-y-2 hover:shadow-xl transition"
-              data-reveal
-              style={revealStyle(i * 80)}
-            >
-              <CardHeader className="space-y-3">
-                <div className="flex items-center gap-2 text-primary">
-                  {p.icon}
-                  <CardTitle className="text-lg">{p.title}</CardTitle>
-                </div>
-                <p className="text-sm text-muted-foreground">{p.desc}</p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-2xl font-bold text-primary">{p.stat}</div>
-                <div className="flex flex-wrap gap-2">
-                  {p.tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="text-[11px]"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </Section>
-
-      {/* INTEGRATIONS */}
-      <Section
-        kicker="Integrations"
-        title="Plays nice with your stack"
-        subtitle="Connect analytics, messaging, and pipelines without custom code."
-      >
-        <div className="flex flex-wrap justify-center gap-12">
-          {integrations.map((i, idx) => (
-            <div
-              key={i.label}
-              className="flex flex-col items-center gap-2"
-              data-reveal
-              style={revealStyle(idx * 70)}
-            >
-              {i.icon}
-              <span className="text-xs text-muted-foreground">{i.label}</span>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* CAROUSEL: INSIGHTS */}
-      <Section
-        kicker="Analytics"
-        title="Insight modules that stay in sync"
-        subtitle="The metrics you need, presented as focused modules that scale with your team."
-      >
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {insightModules.map((p, i) => (
-            <Card
-              key={p.title}
-              className="w-full hover:-translate-y-2 hover:shadow-xl transition"
-              data-reveal
-              style={revealStyle(i * 80)}
-            >
-              <CardHeader className="space-y-3">
-                <div className="flex items-center gap-2 text-primary">
-                  {p.icon}
-                  <CardTitle className="text-lg">{p.title}</CardTitle>
-                </div>
-                <p className="text-sm text-muted-foreground">{p.desc}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="text-lg font-semibold text-primary">
-                  {p.stat}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </Section>
-
-      {/* USE-CASES */}
-      <Section
-        kicker="Teams"
-        title="Who is Urlvy for?"
-        subtitle="Purpose-built for high-velocity teams that live inside links."
-      >
-        <div className="grid lg:grid-cols-3 gap-8">
-          <UseCase
-            icon={<Rocket className="h-6 w-6" />}
-            h="Marketers"
-            p="Boost CTR & attribute every click with clean campaign data."
-            d="Campaign calendars, UTM governance, and share-ready reporting."
-            delay={0}
-          />
-          <UseCase
-            icon={<Layers className="h-6 w-6" />}
-            h="Product Teams"
-            p="Ship releases with concise, trusted links and health checks."
-            d="Release hubs, changelog tracking, and adoption flows."
-            delay={90}
-          />
-          <UseCase
-            icon={<Cpu className="h-6 w-6" />}
-            h="Developers"
-            p="Instrument link events with APIs, webhooks, and exports."
-            d="Granular permissions, audit logs, and edge routing rules."
-            delay={180}
-          />
-        </div>
-      </Section>
-
-      {/* SECURITY */}
-      <Section
-        kicker="Security"
-        title="Governance built for enterprise"
-        subtitle="Professional-grade controls that keep every team aligned and compliant."
-      >
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {securityPillars.map((pillar, i) => (
-            <Card
-              key={pillar.title}
-              className="hover:-translate-y-2 hover:shadow-xl transition"
-              data-reveal
-              style={revealStyle(i * 70)}
-            >
-              <CardHeader className="space-y-3">
-                <div className="w-10 h-10 rounded-full border flex items-center justify-center bg-background text-primary">
-                  {pillar.icon}
-                </div>
-                <CardTitle className="text-base">{pillar.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{pillar.desc}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </Section>
-
-      {/* TESTIMONIALS */}
-      <section className="bg-muted/5 py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 space-y-10 sm:space-y-12">
-          <div className="text-center space-y-4" data-reveal>
-            <Badge variant="secondary" className="text-xs">
-              CUSTOMER VOICES
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl font-bold">What users say</h2>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Teams rely on Urlvy for reliable attribution, fast execution, and
-              confident reporting.
-            </p>
+          <div className="flex flex-wrap gap-3 sm:gap-4 justify-center mt-10 sm:mt-14 text-sm">
+            <Counter
+              icon={<Link2 className="h-4 w-4" />}
+              val={lk.val}
+              countRef={lk.ref}
+              label="Links created"
+              delay={260}
+            />
+            <Counter
+              icon={<Star className="h-4 w-4 text-yellow-400" />}
+              val="4.9★"
+              label="User rating"
+              delay={320}
+            />
+            <Counter
+              icon={<Globe className="h-4 w-4" />}
+              val={ct.val}
+              countRef={ct.ref}
+              label="Countries"
+              delay={380}
+            />
+            <Counter
+              icon={<Users className="h-4 w-4" />}
+              val={us.val}
+              countRef={us.ref}
+              label="Teams"
+              delay={440}
+            />
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map(([msg, name, role], i) => (
+        </section>
+
+        {/* METRICS */}
+        <Section
+          kicker="Impact"
+          title="Proof in numbers"
+          subtitle="See the scale behind every short link, with performance metrics you can trust."
+        >
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {metrics.map((stat, i) => (
+              <StatTile key={stat.label} {...stat} delay={i * 80} />
+            ))}
+          </div>
+        </Section>
+
+        {/* FEATURES GRID  */}
+        <Section
+          kicker="Platform"
+          title="Everything you need to win clicks"
+          subtitle="A single workspace to shorten, brand, measure, and optimize — without extra scripts."
+        >
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((f, i) => (
               <Card
-                key={name}
-                className="hover:shadow-lg hover:-translate-y-2 transition"
+                key={f.title}
+                className="group hover:-translate-y-2 hover:shadow-xl transition"
                 data-reveal
-                style={revealStyle(i * 80)}
+                data-reveal-parent
+                style={revealStyle(i * 70)}
               >
-                <CardContent className="p-6 space-y-4">
-                  <p>&ldquo;{msg}&rdquo;</p>
-                  <p className="font-semibold">{name}</p>
-                  <p className="text-xs text-muted-foreground">{role}</p>
+                <CardHeader className="flex items-center gap-3">
+                  <div className="text-primary">{f.icon}</div>
+                  <CardTitle>{f.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{f.desc}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
-        </div>
-      </section>
+        </Section>
 
-      {/* PRICING */}
-      {/*<Section*/}
-      {/*  kicker="Pricing"*/}
-      {/*  title="Simple, scalable pricing"*/}
-      {/*  subtitle="Start free and upgrade only when your growth demands it."*/}
-      {/*>*/}
-      {/*  <div className="grid md:grid-cols-3 gap-8">*/}
-      {/*    {[*/}
-      {/*      {*/}
-      {/*        tier: "Free",*/}
-      {/*        price: "Free forever",*/}
-      {/*        desc: "For personal projects and early-stage teams.",*/}
-      {/*      },*/}
-      {/*      {*/}
-      {/*        tier: "Pro",*/}
-      {/*        price: "$9/month",*/}
-      {/*        desc: "For fast-moving teams who need attribution and controls.",*/}
-      {/*      },*/}
-      {/*      {*/}
-      {/*        tier: "Enterprise",*/}
-      {/*        price: "Contact us",*/}
-      {/*        desc: "For regulated orgs with advanced security needs.",*/}
-      {/*      },*/}
-      {/*    ].map((plan, i) => (*/}
-      {/*      <Card*/}
-      {/*        key={plan.tier}*/}
-      {/*        className="flex flex-col hover:shadow-lg transition"*/}
-      {/*        data-reveal*/}
-      {/*        style={revealStyle(i * 80)}*/}
-      {/*      >*/}
-      {/*        <CardHeader className="space-y-2">*/}
-      {/*          <CardTitle>{plan.tier}</CardTitle>*/}
-      {/*          <p className="text-sm text-muted-foreground">{plan.desc}</p>*/}
-      {/*        </CardHeader>*/}
-      {/*        <CardContent className="space-y-4 flex-1">*/}
-      {/*          <h3 className="text-4xl font-bold text-primary">*/}
-      {/*            {plan.price}*/}
-      {/*          </h3>*/}
-      {/*          <ul className="space-y-2 text-sm">*/}
-      {/*            <li className="flex gap-2 items-center">*/}
-      {/*              <Check size={14} className="text-primary" /> Unlimited links*/}
-      {/*            </li>*/}
-      {/*            <li className="flex gap-2 items-center">*/}
-      {/*              <Check size={14} className="text-primary" /> Real-time*/}
-      {/*              analytics*/}
-      {/*            </li>*/}
-      {/*            <li className="flex gap-2 items-center">*/}
-      {/*              <Check size={14} className="text-primary" /> AI summaries*/}
-      {/*            </li>*/}
-      {/*            {plan.tier !== "Free" && (*/}
-      {/*              <li className="flex gap-2 items-center">*/}
-      {/*                <Check size={14} className="text-primary" /> Team*/}
-      {/*                workspaces*/}
-      {/*              </li>*/}
-      {/*            )}*/}
-      {/*            {plan.tier === "Enterprise" && (*/}
-      {/*              <li className="flex gap-2 items-center">*/}
-      {/*                <Check size={14} className="text-primary" /> SSO & SLA*/}
-      {/*              </li>*/}
-      {/*            )}*/}
-      {/*          </ul>*/}
-      {/*          <Button disabled>Join wait-list</Button>*/}
-      {/*        </CardContent>*/}
-      {/*      </Card>*/}
-      {/*    ))}*/}
-      {/*  </div>*/}
-      {/*</Section>*/}
-
-      {/* FAQ */}
-      <Section
-        kicker="FAQ"
-        title="Frequently asked"
-        subtitle="Short answers to the most common questions about Urlvy."
-      >
-        <Accordion type="single" collapsible defaultValue="faq-0">
-          {faq.map(([q, a], i) => (
-            <AccordionItem
-              key={q}
-              value={`faq-${i}`}
-              className="border-b"
+        {/* DEEP-DIVE CHART + COPY */}
+        <section className="bg-muted/5 py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 grid lg:grid-cols-2 gap-10 sm:gap-16 items-center">
+            <img
+              src="/demo.png"
+              alt="Realtime dashboard mock"
+              className="w-full rounded-xl border shadow-md"
               data-reveal
-              style={revealStyle(i * 60)}
-            >
-              <AccordionTrigger>{q}</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {a}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </Section>
+            />
+            <div className="space-y-6">
+              <Badge variant="secondary" className="text-xs" data-reveal>
+                DASHBOARD
+              </Badge>
+              <h2
+                className="text-2xl sm:text-3xl font-bold"
+                data-reveal
+                style={revealStyle(80)}
+              >
+                Live insights, no setup script
+              </h2>
+              <p
+                className="text-muted-foreground"
+                data-reveal
+                style={revealStyle(140)}
+              >
+                Traditional analytics tools need code snippets. Urlvy starts
+                capturing data the moment you shorten — zero integration
+                required.
+              </p>
+              <ul className="space-y-3 text-sm">
+                {[
+                  "Live charts & dashboards",
+                  "UTM source / medium breakout",
+                  "Precise click tracking with no cookies",
+                  "Link health monitoring and status checks",
+                ].map((item, i) => (
+                  <li
+                    key={item}
+                    className="flex items-center gap-2"
+                    data-reveal
+                    style={revealStyle(200 + i * 60)}
+                  >
+                    <Check className="h-4 w-4 text-primary" /> {item}
+                  </li>
+                ))}
+              </ul>
+              <div data-reveal style={revealStyle(420)}>
+                <Button variant="outline" className="w-full sm:w-auto">
+                  View demo report
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      {/* CTA */}
-      <section className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-accent/30 to-secondary/30 blur-2xl -z-10 opacity-20" />
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24 text-center space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-extrabold" data-reveal>
-            Shrink. Share. Track.
-          </h2>
-          <p className="text-muted-foreground text-sm sm:text-base" data-reveal>
-            Hit &ldquo;Start free&rdquo; and create your first smart link in
-            under five seconds.
-          </p>
-          <Link href="/auth/register" data-reveal>
-            <Button size="lg" className="w-full sm:w-auto">
-              Start free
-            </Button>
-          </Link>
-        </div>
-      </section>
+        {/* HOW IT WORKS  */}
+        <Section
+          kicker="Workflow"
+          title="Three simple steps"
+          subtitle="Launch smarter links in minutes and keep every campaign aligned."
+        >
+          <div className="grid sm:grid-cols-3 gap-8 text-center">
+            {howSteps.map((s, i) => (
+              <div
+                key={s.t}
+                className="flex flex-col items-center gap-4"
+                data-reveal
+                style={revealStyle(i * 90)}
+              >
+                <div className="w-16 h-16 rounded-full border flex items-center justify-center bg-background text-primary">
+                  {s.icon}
+                </div>
+                <p className="font-semibold">{s.t}</p>
+                <span className="text-muted-foreground text-xs">{s.d}</span>
+                <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  Step {i + 1}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* CAROUSEL: PLAYBOOKS */}
+        <Section
+          kicker="Playbooks"
+          title="Ready-made growth workflows"
+          subtitle="Swipe through proven setups that teams copy and customize in minutes."
+        >
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {playbooks.map((p, i) => (
+              <Card
+                key={p.title}
+                className="w-full hover:-translate-y-2 hover:shadow-xl transition"
+                data-reveal
+                data-reveal-parent
+                style={revealStyle(i * 80)}
+              >
+                <CardHeader className="space-y-3">
+                  <div className="flex items-center gap-2 text-primary">
+                    {p.icon}
+                    <CardTitle className="text-lg">{p.title}</CardTitle>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{p.desc}</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-2xl font-bold text-primary">
+                    {p.stat}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {p.tags.map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="text-[11px]"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </Section>
+
+        {/* INTEGRATIONS */}
+        <Section
+          kicker="Integrations"
+          title="Plays nice with your stack"
+          subtitle="Connect analytics, messaging, and pipelines without custom code."
+        >
+          <div className="flex flex-wrap justify-center gap-12">
+            {integrations.map((i, idx) => (
+              <div
+                key={i.label}
+                className="flex flex-col items-center gap-2"
+                data-reveal
+                style={revealStyle(idx * 70)}
+              >
+                {i.icon}
+                <span className="text-xs text-muted-foreground">{i.label}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* CAROUSEL: INSIGHTS */}
+        <Section
+          kicker="Analytics"
+          title="Insight modules that stay in sync"
+          subtitle="The metrics you need, presented as focused modules that scale with your team."
+        >
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {insightModules.map((p, i) => (
+              <Card
+                key={p.title}
+                className="w-full hover:-translate-y-2 hover:shadow-xl transition"
+                data-reveal
+                data-reveal-parent
+                style={revealStyle(i * 80)}
+              >
+                <CardHeader className="space-y-3">
+                  <div className="flex items-center gap-2 text-primary">
+                    {p.icon}
+                    <CardTitle className="text-lg">{p.title}</CardTitle>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{p.desc}</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold text-primary">
+                    {p.stat}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </Section>
+
+        {/* USE-CASES */}
+        <Section
+          kicker="Teams"
+          title="Who is Urlvy for?"
+          subtitle="Purpose-built for high-velocity teams that live inside links."
+        >
+          <div className="grid lg:grid-cols-3 gap-8">
+            <UseCase
+              icon={<Rocket className="h-6 w-6" />}
+              h="Marketers"
+              p="Boost CTR & attribute every click with clean campaign data."
+              d="Campaign calendars, UTM governance, and share-ready reporting."
+              delay={0}
+            />
+            <UseCase
+              icon={<Layers className="h-6 w-6" />}
+              h="Product Teams"
+              p="Ship releases with concise, trusted links and health checks."
+              d="Release hubs, changelog tracking, and adoption flows."
+              delay={90}
+            />
+            <UseCase
+              icon={<Cpu className="h-6 w-6" />}
+              h="Developers"
+              p="Instrument link events with APIs, webhooks, and exports."
+              d="Granular permissions, audit logs, and edge routing rules."
+              delay={180}
+            />
+          </div>
+        </Section>
+
+        {/* SECURITY */}
+        <Section
+          kicker="Security"
+          title="Governance built for enterprise"
+          subtitle="Professional-grade controls that keep every team aligned and compliant."
+        >
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {securityPillars.map((pillar, i) => (
+              <Card
+                key={pillar.title}
+                className="hover:-translate-y-2 hover:shadow-xl transition"
+                data-reveal
+                data-reveal-parent
+                style={revealStyle(i * 70)}
+              >
+                <CardHeader className="space-y-3">
+                  <div className="w-10 h-10 rounded-full border flex items-center justify-center bg-background text-primary">
+                    {pillar.icon}
+                  </div>
+                  <CardTitle className="text-base">{pillar.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{pillar.desc}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </Section>
+
+        {/* TESTIMONIALS */}
+        <section className="bg-muted/5 py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 space-y-10 sm:space-y-12">
+            <div
+              className="text-center space-y-4"
+              data-reveal
+              data-reveal-parent
+            >
+              <Badge variant="secondary" className="text-xs">
+                CUSTOMER VOICES
+              </Badge>
+              <h2 className="text-2xl sm:text-3xl font-bold">What users say</h2>
+              <p className="text-muted-foreground text-sm sm:text-base">
+                Teams rely on Urlvy for reliable attribution, fast execution,
+                and confident reporting.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {testimonials.map(([msg, name, role], i) => (
+                <Card
+                  key={name}
+                  className="hover:shadow-lg hover:-translate-y-2 transition"
+                  data-reveal
+                  data-reveal-parent
+                  style={revealStyle(i * 80)}
+                >
+                  <CardContent className="p-6 space-y-4">
+                    <p>&ldquo;{msg}&rdquo;</p>
+                    <p className="font-semibold">{name}</p>
+                    <p className="text-xs text-muted-foreground">{role}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* PRICING */}
+        {/*<Section*/}
+        {/*  kicker="Pricing"*/}
+        {/*  title="Simple, scalable pricing"*/}
+        {/*  subtitle="Start free and upgrade only when your growth demands it."*/}
+        {/*>*/}
+        {/*  <div className="grid md:grid-cols-3 gap-8">*/}
+        {/*    {[*/}
+        {/*      {*/}
+        {/*        tier: "Free",*/}
+        {/*        price: "Free forever",*/}
+        {/*        desc: "For personal projects and early-stage teams.",*/}
+        {/*      },*/}
+        {/*      {*/}
+        {/*        tier: "Pro",*/}
+        {/*        price: "$9/month",*/}
+        {/*        desc: "For fast-moving teams who need attribution and controls.",*/}
+        {/*      },*/}
+        {/*      {*/}
+        {/*        tier: "Enterprise",*/}
+        {/*        price: "Contact us",*/}
+        {/*        desc: "For regulated orgs with advanced security needs.",*/}
+        {/*      },*/}
+        {/*    ].map((plan, i) => (*/}
+        {/*      <Card*/}
+        {/*        key={plan.tier}*/}
+        {/*        className="flex flex-col hover:shadow-lg transition"*/}
+        {/*        data-reveal*/}
+        {/*        style={revealStyle(i * 80)}*/}
+        {/*      >*/}
+        {/*        <CardHeader className="space-y-2">*/}
+        {/*          <CardTitle>{plan.tier}</CardTitle>*/}
+        {/*          <p className="text-sm text-muted-foreground">{plan.desc}</p>*/}
+        {/*        </CardHeader>*/}
+        {/*        <CardContent className="space-y-4 flex-1">*/}
+        {/*          <h3 className="text-4xl font-bold text-primary">*/}
+        {/*            {plan.price}*/}
+        {/*          </h3>*/}
+        {/*          <ul className="space-y-2 text-sm">*/}
+        {/*            <li className="flex gap-2 items-center">*/}
+        {/*              <Check size={14} className="text-primary" /> Unlimited links*/}
+        {/*            </li>*/}
+        {/*            <li className="flex gap-2 items-center">*/}
+        {/*              <Check size={14} className="text-primary" /> Real-time*/}
+        {/*              analytics*/}
+        {/*            </li>*/}
+        {/*            <li className="flex gap-2 items-center">*/}
+        {/*              <Check size={14} className="text-primary" /> AI summaries*/}
+        {/*            </li>*/}
+        {/*            {plan.tier !== "Free" && (*/}
+        {/*              <li className="flex gap-2 items-center">*/}
+        {/*                <Check size={14} className="text-primary" /> Team*/}
+        {/*                workspaces*/}
+        {/*              </li>*/}
+        {/*            )}*/}
+        {/*            {plan.tier === "Enterprise" && (*/}
+        {/*              <li className="flex gap-2 items-center">*/}
+        {/*                <Check size={14} className="text-primary" /> SSO & SLA*/}
+        {/*              </li>*/}
+        {/*            )}*/}
+        {/*          </ul>*/}
+        {/*          <Button disabled>Join wait-list</Button>*/}
+        {/*        </CardContent>*/}
+        {/*      </Card>*/}
+        {/*    ))}*/}
+        {/*  </div>*/}
+        {/*</Section>*/}
+
+        {/* FAQ */}
+        <Section
+          kicker="FAQ"
+          title="Frequently asked"
+          subtitle="Short answers to the most common questions about Urlvy."
+        >
+          <Accordion type="single" collapsible defaultValue="faq-0">
+            {faq.map(([q, a], i) => (
+              <AccordionItem
+                key={q}
+                value={`faq-${i}`}
+                className="border-b"
+                data-reveal
+                data-reveal-parent
+                style={revealStyle(i * 60)}
+              >
+                <AccordionTrigger>{q}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">
+                  {a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </Section>
+
+        {/* CTA */}
+        <section className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-accent/30 to-secondary/30 blur-2xl -z-10 opacity-20" />
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24 text-center space-y-6">
+            <h2 className="text-3xl sm:text-4xl font-extrabold" data-reveal>
+              Shrink. Share. Track.
+            </h2>
+            <p
+              className="text-muted-foreground text-sm sm:text-base"
+              data-reveal
+            >
+              Hit &ldquo;Start free&rdquo; and create your first smart link in
+              under five seconds.
+            </p>
+            <Link href="/auth/register" data-reveal>
+              <Button size="lg" className="w-full sm:w-auto">
+                Start free
+              </Button>
+            </Link>
+          </div>
+        </section>
+      </main>
 
       {/* gradient keyframes */}
       <style jsx>{`
@@ -921,23 +946,24 @@ export default function Landing() {
           animation: floatSoft 14s ease-in-out infinite;
           animation-delay: -3s;
         }
-        [data-reveal] {
+        [data-reveal-root] :not(script):not(style):not(noscript) {
           opacity: 0;
-          transform: translateY(18px) scale(0.98);
-          filter: blur(4px);
+          transform: translateY(12px);
+          filter: blur(2px);
           transition:
-            opacity 0.7s ease,
-            transform 0.7s ease,
-            filter 0.7s ease;
+            opacity 0.65s ease,
+            transform 0.65s ease,
+            filter 0.65s ease;
           transition-delay: var(--delay, 0ms);
+          will-change: opacity, transform;
         }
-        .reveal-in {
+        [data-reveal-root] .reveal-in {
           opacity: 1;
           transform: translateY(0) scale(1);
           filter: blur(0);
         }
         @media (prefers-reduced-motion: reduce) {
-          [data-reveal] {
+          [data-reveal-root] :not(script):not(style):not(noscript) {
             opacity: 1;
             transform: none;
             filter: none;
@@ -968,7 +994,7 @@ function Section({
 }) {
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24 space-y-10 sm:space-y-12">
-      <div className="space-y-4 text-center" data-reveal>
+      <div className="space-y-4 text-center" data-reveal data-reveal-parent>
         {kicker && (
           <Badge
             variant="secondary"
@@ -1042,6 +1068,7 @@ function StatTile({
     <Card
       className="p-6 hover:-translate-y-2 hover:shadow-xl transition"
       data-reveal
+      data-reveal-parent
       style={revealStyle(delay)}
     >
       <div className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">
@@ -1071,6 +1098,7 @@ function UseCase({
     <Card
       className="hover:-translate-y-2 hover:shadow-xl transition"
       data-reveal
+      data-reveal-parent
       style={revealStyle(delay)}
     >
       <CardHeader className="flex flex-col items-center gap-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -43,6 +43,7 @@ import {
   Briefcase,
   FileText,
   Sparkles,
+  ChevronDown,
 } from "lucide-react";
 
 function useCountUp(target: number, duration = 1400) {
@@ -349,37 +350,92 @@ const revealStyle = (delay = 0) =>
 export default function Landing() {
   // rotate word in hero
   const [w, setW] = useState(0);
+  const wordRef = useRef<HTMLSpanElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const [wordWidth, setWordWidth] = useState<number | null>(null);
   useEffect(() => {
     const id = setInterval(() => setW((i) => (i + 1) % rotate.length), 2300);
     return () => clearInterval(id);
   }, []);
+  useLayoutEffect(() => {
+    const el = measureRef.current ?? wordRef.current;
+    if (!el) return;
+    const { width } = el.getBoundingClientRect();
+    if (width) setWordWidth(width);
+  }, [w]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root =
       document.querySelector<HTMLElement>("[data-reveal-root]") ??
       document.body;
-    const revealTargets = Array.from(
-      root.querySelectorAll<HTMLElement>("*"),
-    ).filter(
-      (el) =>
-        !["SCRIPT", "STYLE", "NOSCRIPT"].includes(el.tagName) &&
-        !el.classList.contains("reveal-ignore"),
-    );
+    const revealTargets = Array.from(root.querySelectorAll<HTMLElement>("*"))
+      .filter((el) => el !== root)
+      .filter(
+        (el) =>
+          !["SCRIPT", "STYLE", "NOSCRIPT"].includes(el.tagName) &&
+          !el.classList.contains("reveal-ignore"),
+      );
     if (!revealTargets.length) return;
+
+    const reveal = (el: Element) => {
+      el.classList.add("reveal-in");
+    };
+
+    revealTargets.forEach((el) => el.classList.add("reveal-pending"));
+
+    let ticking = false;
+    const revealInView = () => {
+      const vh = window.innerHeight || 0;
+      revealTargets.forEach((el) => {
+        if (!el.classList.contains("reveal-pending")) return;
+        const rect = el.getBoundingClientRect();
+        if (rect.top < vh * 0.92 && rect.bottom > 0) reveal(el);
+      });
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        revealInView();
+      });
+    };
+
+    if (
+      !("IntersectionObserver" in window) ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      requestAnimationFrame(() => {
+        revealTargets.forEach((el) => reveal(el));
+      });
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
-          entry.target.classList.add("reveal-in");
+          reveal(entry.target);
           observer.unobserve(entry.target);
         });
       },
       { threshold: 0.18, rootMargin: "0px 0px -12% 0px" },
     );
 
-    revealTargets.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+    requestAnimationFrame(() => {
+      revealTargets.forEach((el) => observer.observe(el));
+      requestAnimationFrame(() => {
+        revealInView();
+      });
+    });
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   // counters
@@ -420,8 +476,28 @@ export default function Landing() {
             style={revealStyle(80)}
           >
             Super-charge your&nbsp;
-            <span className="text-primary">{rotate[w]}</span>&nbsp;with smarter
-            links
+            <span className="relative inline-block align-baseline">
+              <span
+                ref={wordRef}
+                className="inline-block transition-[width] duration-300 force-primary !text-[#21b073]"
+                style={{
+                  width: wordWidth ? `${wordWidth}px` : "auto",
+                  color: "#21b073",
+                  WebkitTextFillColor: "#21b073",
+                }}
+                aria-live="polite"
+              >
+                {rotate[w]}
+              </span>
+              <span
+                ref={measureRef}
+                className="absolute left-0 top-0 opacity-0 pointer-events-none whitespace-nowrap reveal-ignore"
+                aria-hidden="true"
+              >
+                {rotate[w]}
+              </span>
+            </span>
+            &nbsp;with smarter links
           </h1>
 
           <p
@@ -483,10 +559,26 @@ export default function Landing() {
               delay={440}
             />
           </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              document.getElementById("impact")?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              })
+            }
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm font-medium text-muted-foreground hover:text-primary transition cursor-pointer flex items-center gap-2"
+            data-reveal
+            style={revealStyle(520)}
+          >
+            Learn more <ChevronDown className="h-4 w-4" />
+          </button>
         </section>
 
         {/* METRICS */}
         <Section
+          id="impact"
           kicker="Impact"
           title="Proof in numbers"
           subtitle="See the scale behind every short link, with performance metrics you can trust."
@@ -917,7 +1009,7 @@ export default function Landing() {
       </main>
 
       {/* gradient keyframes */}
-      <style jsx>{`
+      <style jsx global>{`
         @keyframes gradientShift {
           0%,
           100% {
@@ -946,7 +1038,7 @@ export default function Landing() {
           animation: floatSoft 14s ease-in-out infinite;
           animation-delay: -3s;
         }
-        [data-reveal-root] :not(script):not(style):not(noscript) {
+        [data-reveal-root] .reveal-pending {
           opacity: 0;
           transform: translateY(12px);
           filter: blur(2px);
@@ -961,9 +1053,14 @@ export default function Landing() {
           opacity: 1;
           transform: translateY(0) scale(1);
           filter: blur(0);
+          transition:
+            opacity 0.65s ease,
+            transform 0.65s ease,
+            filter 0.65s ease;
+          transition-delay: var(--delay, 0ms);
         }
         @media (prefers-reduced-motion: reduce) {
-          [data-reveal-root] :not(script):not(style):not(noscript) {
+          [data-reveal-root] .reveal-pending {
             opacity: 1;
             transform: none;
             filter: none;
@@ -975,6 +1072,10 @@ export default function Landing() {
             animation: none;
           }
         }
+        .hero-rotate-word {
+          color: var(--primary-fallback) !important;
+          -webkit-text-fill-color: var(--primary-fallback) !important;
+        }
       `}</style>
     </>
   );
@@ -982,18 +1083,23 @@ export default function Landing() {
 
 //  reusable section wrapper
 function Section({
+  id,
   kicker,
   title,
   subtitle,
   children,
 }: {
+  id?: string;
   kicker?: string;
   title: string;
   subtitle?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24 space-y-10 sm:space-y-12">
+    <section
+      id={id}
+      className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24 space-y-10 sm:space-y-12"
+    >
       <div className="space-y-4 text-center" data-reveal data-reveal-parent>
         {kicker && (
           <Badge

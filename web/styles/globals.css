@@ -18,11 +18,15 @@ body {
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 body {
   @apply bg-background text-foreground font-sans antialiased selection:bg-primary/20;
   letter-spacing: var(--tracking-normal);
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 * {
@@ -214,5 +218,12 @@ body {
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
+    overflow-x: hidden;
+    max-width: 100%;
   }
+}
+
+#__next {
+  max-width: 100%;
+  overflow-x: hidden;
 }

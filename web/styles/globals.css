@@ -41,7 +41,13 @@ body {
   @apply transition-shadow duration-150 hover:shadow-lg;
 }
 
+.force-primary {
+  color: var(--primary-fallback) !important;
+  -webkit-text-fill-color: var(--primary-fallback) !important;
+}
+
 :root {
+  --primary-fallback: #21b073;
   --background: oklch(0.9911 0 0);
   --foreground: oklch(0.2046 0 0);
   --card: oklch(0.9911 0 0);
@@ -93,6 +99,12 @@ body {
   --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.43);
   --tracking-normal: 0.025em;
   --spacing: 0.25rem;
+}
+
+@supports (color: oklch(0.7 0.1 150)) {
+  :root {
+    --primary-fallback: var(--primary);
+  }
 }
 
 .dark {

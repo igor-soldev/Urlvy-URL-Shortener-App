@@ -43,6 +43,7 @@ import {
   Briefcase,
   FileText,
   Sparkles,
+  ChevronDown,
 } from "lucide-react";
 
 function useCountUp(target: number, duration = 1400) {
@@ -349,10 +350,19 @@ const revealStyle = (delay = 0) =>
 export default function Landing() {
   // rotate word in hero
   const [w, setW] = useState(0);
+  const wordRef = useRef<HTMLSpanElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const [wordWidth, setWordWidth] = useState<number | null>(null);
   useEffect(() => {
     const id = setInterval(() => setW((i) => (i + 1) % rotate.length), 2300);
     return () => clearInterval(id);
   }, []);
+  useLayoutEffect(() => {
+    const el = measureRef.current ?? wordRef.current;
+    if (!el) return;
+    const { width } = el.getBoundingClientRect();
+    if (width) setWordWidth(width);
+  }, [w]);
 
   useLayoutEffect(() => {
     const root =
@@ -466,8 +476,28 @@ export default function Landing() {
             style={revealStyle(80)}
           >
             Super-charge your&nbsp;
-            <span className="text-primary">{rotate[w]}</span>&nbsp;with smarter
-            links
+            <span className="relative inline-block align-baseline">
+              <span
+                ref={wordRef}
+                className="inline-block transition-[width] duration-300 force-primary !text-[#21b073]"
+                style={{
+                  width: wordWidth ? `${wordWidth}px` : "auto",
+                  color: "#21b073",
+                  WebkitTextFillColor: "#21b073",
+                }}
+                aria-live="polite"
+              >
+                {rotate[w]}
+              </span>
+              <span
+                ref={measureRef}
+                className="absolute left-0 top-0 opacity-0 pointer-events-none whitespace-nowrap reveal-ignore"
+                aria-hidden="true"
+              >
+                {rotate[w]}
+              </span>
+            </span>
+            &nbsp;with smarter links
           </h1>
 
           <p
@@ -529,10 +559,26 @@ export default function Landing() {
               delay={440}
             />
           </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              document.getElementById("impact")?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              })
+            }
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm font-medium text-muted-foreground hover:text-primary transition cursor-pointer flex items-center gap-2"
+            data-reveal
+            style={revealStyle(520)}
+          >
+            Learn more <ChevronDown className="h-4 w-4" />
+          </button>
         </section>
 
         {/* METRICS */}
         <Section
+          id="impact"
           kicker="Impact"
           title="Proof in numbers"
           subtitle="See the scale behind every short link, with performance metrics you can trust."
@@ -1026,6 +1072,10 @@ export default function Landing() {
             animation: none;
           }
         }
+        .hero-rotate-word {
+          color: var(--primary-fallback) !important;
+          -webkit-text-fill-color: var(--primary-fallback) !important;
+        }
       `}</style>
     </>
   );
@@ -1033,18 +1083,23 @@ export default function Landing() {
 
 //  reusable section wrapper
 function Section({
+  id,
   kicker,
   title,
   subtitle,
   children,
 }: {
+  id?: string;
   kicker?: string;
   title: string;
   subtitle?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24 space-y-10 sm:space-y-12">
+    <section
+      id={id}
+      className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24 space-y-10 sm:space-y-12"
+    >
       <div className="space-y-4 text-center" data-reveal data-reveal-parent>
         {kicker && (
           <Badge

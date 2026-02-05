@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -354,32 +354,78 @@ export default function Landing() {
     return () => clearInterval(id);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root =
       document.querySelector<HTMLElement>("[data-reveal-root]") ??
       document.body;
-    const revealTargets = Array.from(
-      root.querySelectorAll<HTMLElement>("*"),
-    ).filter(
-      (el) =>
-        !["SCRIPT", "STYLE", "NOSCRIPT"].includes(el.tagName) &&
-        !el.classList.contains("reveal-ignore"),
-    );
+    const revealTargets = Array.from(root.querySelectorAll<HTMLElement>("*"))
+      .filter((el) => el !== root)
+      .filter(
+        (el) =>
+          !["SCRIPT", "STYLE", "NOSCRIPT"].includes(el.tagName) &&
+          !el.classList.contains("reveal-ignore"),
+      );
     if (!revealTargets.length) return;
+
+    const reveal = (el: Element) => {
+      el.classList.add("reveal-in");
+    };
+
+    revealTargets.forEach((el) => el.classList.add("reveal-pending"));
+
+    let ticking = false;
+    const revealInView = () => {
+      const vh = window.innerHeight || 0;
+      revealTargets.forEach((el) => {
+        if (!el.classList.contains("reveal-pending")) return;
+        const rect = el.getBoundingClientRect();
+        if (rect.top < vh * 0.92 && rect.bottom > 0) reveal(el);
+      });
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        revealInView();
+      });
+    };
+
+    if (
+      !("IntersectionObserver" in window) ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      requestAnimationFrame(() => {
+        revealTargets.forEach((el) => reveal(el));
+      });
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
-          entry.target.classList.add("reveal-in");
+          reveal(entry.target);
           observer.unobserve(entry.target);
         });
       },
       { threshold: 0.18, rootMargin: "0px 0px -12% 0px" },
     );
 
-    revealTargets.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+    requestAnimationFrame(() => {
+      revealTargets.forEach((el) => observer.observe(el));
+      requestAnimationFrame(() => {
+        revealInView();
+      });
+    });
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   // counters
@@ -917,7 +963,7 @@ export default function Landing() {
       </main>
 
       {/* gradient keyframes */}
-      <style jsx>{`
+      <style jsx global>{`
         @keyframes gradientShift {
           0%,
           100% {
@@ -946,7 +992,7 @@ export default function Landing() {
           animation: floatSoft 14s ease-in-out infinite;
           animation-delay: -3s;
         }
-        [data-reveal-root] :not(script):not(style):not(noscript) {
+        [data-reveal-root] .reveal-pending {
           opacity: 0;
           transform: translateY(12px);
           filter: blur(2px);
@@ -961,9 +1007,14 @@ export default function Landing() {
           opacity: 1;
           transform: translateY(0) scale(1);
           filter: blur(0);
+          transition:
+            opacity 0.65s ease,
+            transform 0.65s ease,
+            filter 0.65s ease;
+          transition-delay: var(--delay, 0ms);
         }
         @media (prefers-reduced-motion: reduce) {
-          [data-reveal-root] :not(script):not(style):not(noscript) {
+          [data-reveal-root] .reveal-pending {
             opacity: 1;
             transform: none;
             filter: none;

@@ -22,6 +22,23 @@ resource "aws_s3_bucket_policy" "site_policy" {
   })
 }
 
+resource "aws_s3_bucket_lifecycle_configuration" "site_lifecycle" {
+  bucket = aws_s3_bucket.site.id
+
+  rule {
+    id     = "expire-old-objects"
+    status = "Enabled"
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+  }
+}
+
 resource "aws_cloudfront_distribution" "cdn" {
   enabled = true
 

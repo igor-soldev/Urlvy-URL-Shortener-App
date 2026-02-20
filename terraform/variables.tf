@@ -49,3 +49,14 @@ variable "ecs_desired_count" {
   type    = number
   default = 2
 }
+
+variable "monthly_budget_limit" {
+  type        = string
+  default     = "50"
+  description = "Monthly AWS cost budget limit in USD. An alert is sent at 80% of this value."
+}
+
+variable "budget_alert_email" {
+  type        = string
+  description = "Email address to receive AWS budget alert notifications."
+}

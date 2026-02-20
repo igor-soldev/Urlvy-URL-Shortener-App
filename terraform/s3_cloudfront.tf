@@ -8,6 +8,14 @@ resource "aws_s3_bucket" "site" {
   }
 }
 
+resource "aws_s3_bucket_versioning" "site_versioning" {
+  bucket = aws_s3_bucket.site.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 resource "aws_s3_bucket_policy" "site_policy" {
   bucket = aws_s3_bucket.site.id
 
